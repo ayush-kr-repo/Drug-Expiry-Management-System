@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+
+<div class="page-header fadein">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div style="width:8px;height:8px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 8px #ff3b3b;animation:pulse 2s infinite;"></div>
+    <h1>Admin Dashboard</h1>
+  </div>
+  <p>Full system overview · {{ session.user.username }}</p>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+  {% for icon,val,label,color in [
+    ('⊞', stats.total,     'Total Batches',       '#58a6ff'),
+    ('◩', '{:,}'.format(stats.total_qty), 'Total Stock (units)', '#79c0ff'),
+    ('⊕', stats.drugs,     'Registered Drugs',    '#d2a8ff'),
+    ('✕', stats.expired,   'Expired Batches',     '#ff6b6b'),
+    ('⚠', stats.critical,  'Critical (<30d)',     '#ffab40'),
+    ('◎', stats.warning,   'Warning (<90d)',      '#ffd600'),
+  ] %}
+  <div class="stat-card fadein">
+    <div class="stat-icon" style="color:{{ color }}">{{ icon }}</div>
+    <div class="stat-value" style="color:{{ color }}">{{ val }}</div>
+    <div class="stat-label">{{ label }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Two column layout -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+
+  <!-- Medicine Catalog stat -->
+  <div class="card fadein">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <span style="font-weight:600;">Medicine Catalog</span>
+      <a href="{{ url_for('catalog') }}" style="color:var(--blue);font-family:var(--mono);font-size:12px;text-decoration:none;">BROWSE →</a>
+    </div>
+    <div style="font-size:36px;font-weight:700;color:var(--green);font-family:var(--mono);">{{ '{:,}'.format(stats.catalog) }}</div>
+    <div style="color:var(--muted);font-size:13px;margin-top:4px;">medicines in database</div>
+    <div style="margin-top:14px;font-size:12px;color:var(--dim);">Search drug info, side effects, substitutes →</div>
+  </div>
+
+  <!-- Recent Audit -->
+  <div class="card fadein">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <span style="font-weight:600;">Recent DB Activity</span>
+      <a href="{{ url_for('audit') }}" style="color:var(--red-muted);font-family:var(--mono);font-size:12px;text-decoration:none;">VIEW ALL →</a>
+    </div>
+    {% for log in recent_audit %}
+    {% set colors = {'INSERT':'#00e576','DELETE':'#ff6b6b','UPDATE':'#ffd600'} %}
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #161b22;font-size:12px;">
+      <span style="font-family:var(--mono);color:{{ colors.get(log.action,'#fff') }};">{{ log.action }}</span>
+      <span style="color:var(--blue);font-family:var(--mono);">{{ log.record_id }}</span>
+      <span style="color:var(--dim);font-family:var(--mono);">{{ log.timestamp[11:16] }}</span>
+    </div>
+    {% else %}
+    <p style="color:var(--dim);font-family:var(--mono);font-size:12px;">No activity yet.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Active Alerts Table -->
+<div class="card fadein" style="margin-bottom:20px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <span style="font-weight:600;font-size:15px;">🧾 Recent Bills</span>
+    <a href="{{ url_for('bills') }}" style="color:var(--blue);font-family:var(--mono);font-size:12px;text-decoration:none;">VIEW ALL →</a>
+  </div>
+  {% if recent_bills %}
+  <table>
+    <thead><tr><th>BILL NO.</th><th>PATIENT</th><th>DATE</th><th>ITEMS</th><th>TOTAL</th><th>PAYMENT</th><th></th></tr></thead>
+    <tbody>
+      {% for b in recent_bills %}
+      <tr>
+        <td class="td-mono" style="color:var(--blue);">{{ b.bill_number }}</td>
+        <td style="font-weight:600;font-size:13px;">{{ b.patient_name }}</td>
+        <td class="td-mono td-muted" style="font-size:11px;">{{ b.bill_date[:10] }}</td>
+        <td class="td-mono td-muted">{{ b.item_count }}</td>
+        <td class="td-mono" style="color:var(--green);">Rs. {{ '%.2f'|format(b.total) }}</td>
+        <td class="td-muted" style="font-size:12px;">{{ b.payment_method }}</td>
+        <td><a href="{{ url_for('bill_detail', bill_id=b.bill_id) }}" class="btn btn-ghost btn-sm" style="font-size:11px;">view</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:var(--dim);font-family:var(--mono);font-size:13px;">No bills yet. <a href="{{ url_for('billing') }}" style="color:var(--blue);">Create first bill →</a></p>
+  {% endif %}
+</div>
+
+<!-- Active Alerts Table -->
+<div class="card fadein">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <span style="font-weight:600;font-size:15px;">⚠ Active Expiry Alerts</span>
+    <a href="{{ url_for('alerts') }}" style="color:var(--red-muted);font-family:var(--mono);font-size:12px;text-decoration:none;">VIEW ALL →</a>
+  </div>
+  {% if alerts %}
+  <table>
+    <thead><tr><th>BATCH</th><th>DRUG</th><th>EXPIRY</th><th>QTY</th><th>LOCATION</th><th>STATUS</th><th>DAYS LEFT</th></tr></thead>
+    <tbody>
+      {% for b in alerts %}
+      <tr>
+        <td class="td-mono">{{ b.batch_id }}</td>
+        <td style="font-weight:600;">{{ b.drug_name }}</td>
+        <td class="td-mono td-muted">{{ b.exp_date }}</td>
+        <td class="td-mono {% if b.quantity < 100 %}td-warn{% endif %}">{{ b.quantity }}</td>
+        <td class="td-muted">{{ b.location }}</td>
+        <td><span class="badge badge-{{ b.status }}">{{ b.status|upper }}</span></td>
+        <td class="td-mono" style="color:{% if b.days_left < 0 %}#ff6b6b{% elif b.days_left < 30 %}#ffab40{% else %}#ffd600{% endif %};">
+          {% if b.days_left < 0 %}-{{ b.days_left * -1 }}d{% else %}{{ b.days_left }}d{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:var(--dim);font-family:var(--mono);font-size:13px;text-align:center;padding:20px;">✓ No active alerts</p>
+  {% endif %}
+</div>
+
+{% endblock %}

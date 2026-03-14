@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Bills History{% endblock %}
+{% block content %}
+
+<div class="page-header-row fadein">
+  <div><h1>Bills History</h1><p style="color:var(--muted);font-size:13px;margin-top:4px;">{{ bills|length }} bills found</p></div>
+  <a href="{{ url_for('billing') }}" class="btn btn-primary">+ New Bill</a>
+</div>
+
+<form method="GET" class="filters fadein" style="flex-wrap:wrap;">
+  <input class="filter-input" name="q" placeholder="Search bill no. or patient..." value="{{ search }}" style="min-width:200px;"/>
+  <input class="filter-input" type="date" name="from" value="{{ from_dt }}" style="width:150px;"/>
+  <input class="filter-input" type="date" name="to"   value="{{ to_dt }}"   style="width:150px;"/>
+  <button type="submit" class="btn btn-ghost btn-sm">Filter</button>
+  {% if search or from_dt or to_dt %}<a href="{{ url_for('bills') }}" class="btn btn-ghost btn-sm">✕ Clear</a>{% endif %}
+</form>
+
+<div class="table-wrap fadein" style="animation-delay:.05s;">
+  <table>
+    <thead><tr><th>BILL NO.</th><th>DATE</th><th>PATIENT</th><th>ITEMS</th><th>TOTAL</th><th>PAYMENT</th><th>BY</th><th></th></tr></thead>
+    <tbody>
+      {% for b in bills %}
+      <tr>
+        <td class="td-mono" style="color:var(--blue);">{{ b.bill_number }}</td>
+        <td class="td-mono td-muted" style="font-size:12px;">{{ b.bill_date[:10] }}</td>
+        <td style="font-weight:600;font-size:13px;">{{ b.patient_name }}</td>
+        <td class="td-mono td-muted">{{ b.item_count }}</td>
+        <td class="td-mono" style="color:var(--green);">Rs. {{ '%.2f'|format(b.total) }}</td>
+        <td class="td-muted" style="font-size:12px;">{{ b.payment_method }}</td>
+        <td class="td-muted td-mono" style="font-size:11px;">{{ b.billed_by }}</td>
+        <td style="display:flex;gap:6px;">
+          <a href="{{ url_for('bill_detail', bill_id=b.bill_id) }}" class="btn btn-ghost btn-sm" style="font-size:11px;">view</a>
+          <a href="{{ url_for('download_pdf', bill_id=b.bill_id) }}" class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red-muted);">⬇ PDF</a>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not bills %}
+      <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--dim);font-family:var(--mono);">No bills found</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

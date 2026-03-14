@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ patient.name }}{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:20px;" class="fadein">
+  <a href="{{ url_for('patients') }}" style="color:var(--muted);font-family:var(--mono);font-size:12px;text-decoration:none;">← Back to Patients</a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+  <div class="card fadein">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+      <div>
+        <h1 style="font-size:20px;font-weight:700;">{{ patient.name }}</h1>
+        <div style="color:var(--blue);font-family:var(--mono);font-size:12px;margin-top:4px;">{{ patient.patient_id }}</div>
+      </div>
+      <a href="{{ url_for('billing') }}" class="btn btn-primary btn-sm">+ New Bill</a>
+    </div>
+    {% for label, val in [('Phone', patient.phone), ('Email', patient.email), ('Address', patient.address), ('Member Since', patient.created_at[:10])] %}
+    {% if val %}
+    <div style="padding:8px 0;border-bottom:1px solid #161b22;">
+      <span style="font-size:11px;color:var(--dim);font-family:var(--mono);">{{ label|upper }}</span>
+      <div style="font-size:14px;margin-top:2px;">{{ val }}</div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <div class="card fadein" style="animation-delay:.05s;">
+    <div style="font-weight:600;margin-bottom:16px;">💰 Summary</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div style="text-align:center;padding:16px;background:#161b22;border-radius:8px;">
+        <div style="font-size:28px;font-weight:700;color:var(--blue);font-family:var(--mono);">{{ bills|length }}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Total Bills</div>
+      </div>
+      <div style="text-align:center;padding:16px;background:#161b22;border-radius:8px;">
+        <div style="font-size:24px;font-weight:700;color:var(--green);font-family:var(--mono);">Rs.{{ '%.0f'|format(total_spent) }}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Total Spent</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Purchase History -->
+{% if history %}
+<div class="card fadein" style="margin-bottom:20px;animation-delay:.10s;">
+  <div style="font-weight:600;margin-bottom:16px;">📊 Purchase History (All Time)</div>
+  <table>
+    <thead><tr><th>MEDICINE</th><th>TIMES BOUGHT</th><th>TOTAL QTY</th><th>TOTAL SPENT</th></tr></thead>
+    <tbody>
+      {% for h in history %}
+      <tr>
+        <td style="font-weight:600;">{{ h.drug_name }}</td>
+        <td class="td-mono" style="color:var(--muted);">{{ h.times_bought }}x</td>
+        <td class="td-mono" style="color:var(--blue);">{{ h.total_qty }}</td>
+        <td class="td-mono" style="color:var(--green);">Rs. {{ '%.2f'|format(h.total_spent) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<!-- Bills -->
+<div class="card fadein" style="animation-delay:.15s;">
+  <div style="font-weight:600;margin-bottom:16px;">🧾 Bills</div>
+  {% if bills %}
+  <table>
+    <thead><tr><th>BILL NO.</th><th>DATE</th><th>ITEMS</th><th>TOTAL</th><th>PAYMENT</th><th></th></tr></thead>
+    <tbody>
+      {% for b in bills %}
+      <tr>
+        <td class="td-mono" style="color:var(--blue);">{{ b.bill_number }}</td>
+        <td class="td-muted td-mono" style="font-size:12px;">{{ b.bill_date[:10] }}</td>
+        <td class="td-mono td-muted">{{ b.item_count }}</td>
+        <td class="td-mono" style="color:var(--green);">Rs. {{ '%.2f'|format(b.total) }}</td>
+        <td class="td-muted" style="font-size:12px;">{{ b.payment_method }}</td>
+        <td style="display:flex;gap:6px;">
+          <a href="{{ url_for('bill_detail', bill_id=b.bill_id) }}" class="btn btn-ghost btn-sm" style="font-size:11px;">view</a>
+          <a href="{{ url_for('download_pdf', bill_id=b.bill_id) }}" class="btn btn-ghost btn-sm" style="font-size:11px;color:var(--red-muted);">PDF</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:var(--dim);font-family:var(--mono);font-size:13px;">No bills yet.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

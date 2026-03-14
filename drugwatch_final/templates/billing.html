@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+{% block title %}Billing{% endblock %}
+{% block content %}
+
+<div class="page-header fadein">
+  <h1>New Bill</h1>
+  <p>Dispense medicines and generate receipt</p>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 380px;gap:20px;">
+
+  <!-- LEFT: Patient + Drug search -->
+  <div>
+
+    <!-- Patient Selection -->
+    <div class="card fadein" style="margin-bottom:16px;">
+      <div style="font-weight:600;margin-bottom:16px;">👤 Patient</div>
+      <div style="display:flex;gap:10px;margin-bottom:10px;">
+        <input id="patientSearch" placeholder="Search by name or phone..." class="filter-input" style="flex:1;"
+               oninput="searchPatients(this.value)"/>
+        <button class="btn btn-ghost btn-sm" onclick="setWalkin()">Walk-in</button>
+        <button class="btn btn-ghost btn-sm" onclick="openModal('addPatientModal')">+ New</button>
+      </div>
+      <div id="patientResults" style="display:none;background:#161b22;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:10px;"></div>
+      <div id="selectedPatient" style="display:none;background:#00e57611;border:1px solid #00e57633;border-radius:6px;padding:10px 14px;">
+        <span style="color:#00e576;font-family:var(--mono);font-size:12px;">SELECTED PATIENT</span>
+        <div id="selectedPatientName" style="font-weight:600;margin-top:4px;"></div>
+        <button onclick="clearPatient()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;margin-top:4px;">✕ clear</button>
+      </div>
+      <div id="walkinBadge" style="display:none;background:#58a6ff11;border:1px solid #58a6ff33;border-radius:6px;padding:10px 14px;">
+        <span style="color:#58a6ff;font-family:var(--mono);font-size:12px;">WALK-IN CUSTOMER</span>
+        <button onclick="clearPatient()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;margin-left:12px;">✕ clear</button>
+      </div>
+      <input type="hidden" id="patientId" value=""/>
+    </div>
+
+    <!-- Medicine Search -->
+    <div class="card fadein" style="animation-delay:.05s;margin-bottom:16px;">
+      <div style="font-weight:600;margin-bottom:16px;">💊 Add Medicine</div>
+      <div style="position:relative;">
+        <input id="drugSearch" placeholder="Search medicine name..." class="filter-input" style="width:100%;"
+               oninput="searchDrugs(this.value)" autocomplete="off"/>
+        <div id="drugResults" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:50;background:#161b22;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-top:4px;box-shadow:0 8px 24px #000;"></div>
+      </div>
+    </div>
+
+    <!-- Bill Options -->
+    <div class="card fadein" style="animation-delay:.10s;">
+      <div style="font-weight:600;margin-bottom:16px;">⚙ Bill Options</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">DISCOUNT (Rs.)</label>
+          <input type="number" id="discount" class="form-input" value="0" min="0" step="0.01" oninput="recalculate()"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">GST (%)</label>
+          <input type="number" id="gst_pct" class="form-input" value="0" min="0" max="100" step="0.1" oninput="recalculate()"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">PAYMENT METHOD</label>
+          <select id="paymentMethod" class="form-input">
+            <option>Cash</option><option>Card</option><option>UPI</option>
+            <option>Net Banking</option><option>Cheque</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">NOTES (optional)</label>
+          <input type="text" id="notes" class="form-input" placeholder="Any notes..."/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Cart -->
+  <div style="position:sticky;top:20px;align-self:start;">
+    <div class="card">
+      <div style="font-weight:600;margin-bottom:16px;font-size:15px;">🛒 Cart</div>
+      <div id="cartItems" style="min-height:80px;">
+        <div id="emptyCart" style="text-align:center;padding:24px;color:var(--dim);font-family:var(--mono);font-size:12px;">Cart is empty</div>
+      </div>
+
+      <!-- Totals -->
+      <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:6px;">
+          <span>Subtotal</span><span id="subtotal" style="font-family:var(--mono);">Rs. 0.00</span>
+        </div>
+        <div id="discountRow" style="display:none;display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:6px;">
+          <span>Discount</span><span id="discountAmt" style="font-family:var(--mono);color:#ff6b6b;"></span>
+        </div>
+        <div id="gstRow" style="display:none;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:6px;">
+          <span>GST</span><span id="gstAmt" style="font-family:var(--mono);color:#ffd600;"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:700;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+          <span>Total</span><span id="totalAmt" style="font-family:var(--mono);color:var(--green);">Rs. 0.00</span>
+        </div>
+      </div>
+
+      <button onclick="generateBill()" style="width:100%;background:var(--red);color:#fff;border:none;padding:13px;border-radius:8px;cursor:pointer;font-family:var(--sans);font-weight:700;font-size:15px;margin-top:16px;transition:opacity 0.15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        Generate Bill →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden form for submit -->
+<form id="billForm" method="POST" action="{{ url_for('create_bill') }}" style="display:none;">
+  <input type="hidden" name="patient_id" id="f_patient_id"/>
+  <input type="hidden" name="items" id="f_items"/>
+  <input type="hidden" name="discount" id="f_discount"/>
+  <input type="hidden" name="gst_pct" id="f_gst_pct"/>
+  <input type="hidden" name="payment_method" id="f_payment"/>
+  <input type="hidden" name="notes" id="f_notes"/>
+</form>
+
+<!-- Add Patient Modal -->
+<div class="modal-overlay" id="addPatientModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Register New Patient</span>
+      <button class="modal-close" onclick="closeModal('addPatientModal')">✕</button>
+    </div>
+    <form method="POST" action="{{ url_for('add_patient') }}">
+      <div class="form-group"><label class="form-label">FULL NAME</label><input name="name" class="form-input" required/></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">PHONE</label><input name="phone" class="form-input" placeholder="98XXXXXXXX"/></div>
+        <div class="form-group"><label class="form-label">EMAIL</label><input name="email" type="email" class="form-input"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">ADDRESS</label><input name="address" class="form-input"/></div>
+      <input type="hidden" name="redirect_to" value="billing"/>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;font-size:15px;margin-top:6px;">Register Patient</button>
+    </form>
+  </div>
+</div>
+
+<script>
+let cart = [];
+
+async function searchPatients(q) {
+  if (q.length < 2) { document.getElementById('patientResults').style.display='none'; return; }
+  const res = await fetch(`/api/patients/search?q=${encodeURIComponent(q)}`);
+  const data = await res.json();
+  const box  = document.getElementById('patientResults');
+  if (!data.length) { box.style.display='none'; return; }
+  box.innerHTML = data.map(p => `
+    <div onclick="selectPatient('${p.patient_id}','${p.name}','${p.phone||''}')"
+         style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px;"
+         onmouseover="this.style.background='#21262d'" onmouseout="this.style.background=''">
+      <b>${p.name}</b> <span style="color:var(--muted);font-family:var(--mono);">${p.patient_id}</span>
+      ${p.phone ? `<span style="color:var(--muted);font-size:11px;margin-left:8px;">${p.phone}</span>` : ''}
+    </div>`).join('');
+  box.style.display='block';
+}
+
+function selectPatient(id, name, phone) {
+  document.getElementById('patientId').value = id;
+  document.getElementById('patientResults').style.display='none';
+  document.getElementById('patientSearch').value='';
+  document.getElementById('selectedPatient').style.display='block';
+  document.getElementById('walkinBadge').style.display='none';
+  document.getElementById('selectedPatientName').textContent = `${name}  ${phone}`;
+}
+
+function setWalkin() {
+  document.getElementById('patientId').value='';
+  document.getElementById('selectedPatient').style.display='none';
+  document.getElementById('walkinBadge').style.display='block';
+  document.getElementById('patientSearch').value='';
+  document.getElementById('patientResults').style.display='none';
+}
+
+function clearPatient() {
+  document.getElementById('patientId').value='';
+  document.getElementById('selectedPatient').style.display='none';
+  document.getElementById('walkinBadge').style.display='none';
+}
+
+let drugTimer;
+async function searchDrugs(q) {
+  clearTimeout(drugTimer);
+  if (q.length < 2) { document.getElementById('drugResults').style.display='none'; return; }
+  drugTimer = setTimeout(async () => {
+    const res  = await fetch(`/api/drugs/search?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    const box  = document.getElementById('drugResults');
+    if (!data.length) { box.innerHTML='<div style="padding:12px;color:var(--muted);font-family:var(--mono);font-size:12px;">No medicines found</div>'; box.style.display='block'; return; }
+    box.innerHTML = data.map(d => `
+      <div onclick="addToCart('${d.batch_id}','${d.drug_name.replace(/'/g,"\\'")}',${d.price},${d.quantity})"
+           style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px;"
+           onmouseover="this.style.background='#21262d'" onmouseout="this.style.background=''">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <b>${d.drug_name}</b>
+          <span style="color:var(--green);font-family:var(--mono);">Rs.${d.price.toFixed(2)}</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">
+          Batch: ${d.batch_id} · Stock: ${d.quantity} · Exp: ${d.exp_date}
+        </div>
+      </div>`).join('');
+    box.style.display='block';
+  }, 250);
+}
+
+function addToCart(batchId, drugName, price, maxStock) {
+  document.getElementById('drugResults').style.display='none';
+  document.getElementById('drugSearch').value='';
+  const existing = cart.find(i => i.batch_id === batchId);
+  if (existing) {
+    if (existing.quantity >= maxStock) { alert('Cannot exceed available stock!'); return; }
+    existing.quantity++;
+  } else {
+    cart.push({ batch_id: batchId, drug_name: drugName, unit_price: price, quantity: 1, max_stock: maxStock });
+  }
+  renderCart();
+}
+
+function removeFromCart(idx) {
+  cart.splice(idx,1); renderCart();
+}
+
+function changeQty(idx, val) {
+  const q = parseInt(val);
+  if (q < 1) { removeFromCart(idx); return; }
+  if (q > cart[idx].max_stock) { alert('Exceeds stock!'); return; }
+  cart[idx].quantity = q;
+  renderCart();
+}
+
+function renderCart() {
+  const box = document.getElementById('cartItems');
+  const empty = document.getElementById('emptyCart');
+  if (!cart.length) {
+    box.innerHTML = '<div id="emptyCart" style="text-align:center;padding:24px;color:var(--dim);font-family:var(--mono);font-size:12px;">Cart is empty</div>';
+    recalculate(); return;
+  }
+  box.innerHTML = cart.map((item,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #161b22;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.drug_name}</div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);">Rs.${item.unit_price.toFixed(2)} each</div>
+      </div>
+      <input type="number" value="${item.quantity}" min="1" max="${item.max_stock}"
+             onchange="changeQty(${i},this.value)"
+             style="width:50px;background:#161b22;border:1px solid var(--border2);border-radius:4px;padding:3px 6px;color:var(--text);font-family:var(--mono);font-size:12px;text-align:center;outline:none;"/>
+      <span style="font-family:var(--mono);font-size:13px;color:var(--green);min-width:60px;text-align:right;">Rs.${(item.unit_price*item.quantity).toFixed(2)}</span>
+      <button onclick="removeFromCart(${i})" style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px;">✕</button>
+    </div>`).join('');
+  recalculate();
+}
+
+function recalculate() {
+  const subtotal = cart.reduce((s,i) => s + i.unit_price*i.quantity, 0);
+  const discount = parseFloat(document.getElementById('discount').value)||0;
+  const gst_pct  = parseFloat(document.getElementById('gst_pct').value)||0;
+  const gst_amt  = (subtotal-discount)*gst_pct/100;
+  const total    = subtotal - discount + gst_amt;
+
+  document.getElementById('subtotal').textContent = `Rs. ${subtotal.toFixed(2)}`;
+  document.getElementById('totalAmt').textContent = `Rs. ${total.toFixed(2)}`;
+
+  const dRow = document.getElementById('discountRow');
+  const gRow = document.getElementById('gstRow');
+  if (discount > 0) {
+    dRow.style.display='flex';
+    document.getElementById('discountAmt').textContent = `- Rs. ${discount.toFixed(2)}`;
+  } else { dRow.style.display='none'; }
+  if (gst_amt > 0) {
+    gRow.style.display='flex';
+    document.getElementById('gstAmt').textContent = `Rs. ${gst_amt.toFixed(2)}`;
+  } else { gRow.style.display='none'; }
+}
+
+function generateBill() {
+  if (!cart.length) { alert('Cart is empty!'); return; }
+  document.getElementById('f_patient_id').value  = document.getElementById('patientId').value;
+  document.getElementById('f_items').value        = JSON.stringify(cart);
+  document.getElementById('f_discount').value     = document.getElementById('discount').value;
+  document.getElementById('f_gst_pct').value      = document.getElementById('gst_pct').value;
+  document.getElementById('f_payment').value      = document.getElementById('paymentMethod').value;
+  document.getElementById('f_notes').value        = document.getElementById('notes').value;
+  document.getElementById('billForm').submit();
+}
+
+// Close dropdowns on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#patientSearch') && !e.target.closest('#patientResults'))
+    document.getElementById('patientResults').style.display='none';
+  if (!e.target.closest('#drugSearch') && !e.target.closest('#drugResults'))
+    document.getElementById('drugResults').style.display='none';
+});
+</script>
+{% endblock %}

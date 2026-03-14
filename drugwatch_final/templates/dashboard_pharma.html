@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Pharmacist Dashboard{% endblock %}
+{% block content %}
+
+<div class="page-header fadein">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div style="width:8px;height:8px;border-radius:50%;background:#00e576;box-shadow:0 0 8px #00e576;animation:pulse 2s infinite;"></div>
+    <h1>Pharmacist Dashboard</h1>
+  </div>
+  <p>Your daily tasks and stock overview · {{ session.user.username }}</p>
+</div>
+
+<!-- Pharmacist-specific stats — only what matters to them -->
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);">
+  <div class="stat-card fadein">
+    <div class="stat-icon" style="color:#58a6ff">⊞</div>
+    <div class="stat-value" style="color:#58a6ff">{{ stats.total }}</div>
+    <div class="stat-label">Total Batches</div>
+  </div>
+  <div class="stat-card fadein" style="animation-delay:.05s">
+    <div class="stat-icon" style="color:#00e576">◩</div>
+    <div class="stat-value" style="color:#00e576">{{ '{:,}'.format(stats.total_qty) }}</div>
+    <div class="stat-label">Total Stock</div>
+  </div>
+  <div class="stat-card fadein" style="animation-delay:.10s">
+    <div class="stat-icon" style="color:#ffab40">⚠</div>
+    <div class="stat-value" style="color:#ffab40">{{ stats.critical }}</div>
+    <div class="stat-label">Need Attention</div>
+  </div>
+  <div class="stat-card fadein" style="animation-delay:.15s">
+    <div class="stat-icon" style="color:#ff6b6b">✕</div>
+    <div class="stat-value" style="color:#ff6b6b">{{ stats.expired }}</div>
+    <div class="stat-label">Expired (Report Admin)</div>
+  </div>
+</div>
+
+<!-- Task panel -->
+<div style="display:grid;grid-template-columns:3fr 2fr;gap:20px;">
+
+  <!-- Batches needing attention -->
+  <div class="card fadein">
+    <div style="font-weight:600;margin-bottom:16px;">📋 Batches Needing Attention</div>
+    {% if my_batches %}
+    <table>
+      <thead><tr><th>BATCH</th><th>DRUG</th><th>QTY</th><th>STATUS</th><th>DAYS</th><th>UPDATE</th></tr></thead>
+      <tbody>
+        {% for b in my_batches %}
+        <tr>
+          <td class="td-mono">{{ b.batch_id }}</td>
+          <td style="font-weight:600;font-size:13px;">{{ b.drug_name }}</td>
+          <td class="td-mono {% if b.quantity < 100 %}td-warn{% endif %}">{{ b.quantity }}</td>
+          <td><span class="badge badge-{{ b.status }}">{{ b.status|upper }}</span></td>
+          <td class="td-mono" style="color:{% if b.days_left < 30 %}#ffab40{% else %}#ffd600{% endif %};">{{ b.days_left }}d</td>
+          <td>
+            <form method="POST" action="{{ url_for('update_qty') }}" style="display:inline-flex;gap:4px;align-items:center;">
+              <input type="hidden" name="batch_id" value="{{ b.batch_id }}"/>
+              <input type="number" name="quantity" value="{{ b.quantity }}" min="0" style="width:64px;background:#161b22;border:1px solid var(--border2);border-radius:4px;padding:3px 6px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;"/>
+              <button type="submit" class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:10px;">✓</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color:var(--green);font-family:var(--mono);font-size:13px;">✓ All batches are in good condition.</p>
+    {% endif %}
+  </div>
+
+  <!-- Low stock panel -->
+  <div class="card fadein" style="animation-delay:.1s">
+    <div style="font-weight:600;margin-bottom:16px;">⚡ Low Stock (&lt;100 units)</div>
+    {% if low_stock %}
+    {% for b in low_stock %}
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #161b22;">
+      <div>
+        <div style="font-size:13px;font-weight:600;">{{ b.drug_name }}</div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);">#{{ b.batch_id }} · {{ b.location }}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:20px;font-weight:700;color:var(--orange);font-family:var(--mono);">{{ b.quantity }}</div>
+        <div style="font-size:10px;color:var(--dim);">units left</div>
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p style="color:var(--green);font-family:var(--mono);font-size:13px;">✓ All stock sufficient.</p>
+    {% endif %}
+
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-bottom:8px;">QUICK LINKS</div>
+      <a href="{{ url_for('inventory') }}" style="display:block;color:var(--blue);font-size:13px;text-decoration:none;padding:6px 0;">→ View Full Inventory</a>
+      <a href="{{ url_for('alerts') }}"    style="display:block;color:var(--orange);font-size:13px;text-decoration:none;padding:6px 0;">→ View All Alerts</a>
+      <a href="{{ url_for('catalog') }}"   style="display:block;color:var(--green);font-size:13px;text-decoration:none;padding:6px 0;">→ Search Medicine Catalog</a>
+    </div>
+  </div>
+</div>
+
+<!-- Notice box -->
+<div style="background:#58a6ff11;border:1px solid #58a6ff33;border-radius:10px;padding:16px 20px;margin-top:20px;" class="fadein">
+  <span style="color:var(--blue);font-size:13px;font-family:var(--mono);">ℹ  PHARMACIST ROLE — You can update stock quantities and view all inventory. To delete records or manage users, contact your Admin.</span>
+</div>
+
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Audit Log{% endblock %}
+{% block content %}
+
+<div class="page-header fadein">
+  <h1>Audit Log</h1>
+  <p>SQL Trigger-generated event history · last 100 entries</p>
+</div>
+
+<div class="table-wrap fadein" style="animation-delay:.05s">
+  <table>
+    <thead><tr><th>#</th><th>TIMESTAMP</th><th>ACTION</th><th>TABLE</th><th>RECORD</th><th>DETAILS</th></tr></thead>
+    <tbody>
+      {% for log in logs %}
+      {% set colors = {'INSERT':'#00e576','DELETE':'#ff6b6b','UPDATE':'#ffd600'} %}
+      <tr>
+        <td class="td-mono td-muted">{{ log.log_id }}</td>
+        <td class="td-mono td-muted" style="font-size:12px;">{{ log.timestamp }}</td>
+        <td><span class="badge" style="background:{{ colors.get(log.action,'#fff') }}22;border:1px solid {{ colors.get(log.action,'#fff') }};color:{{ colors.get(log.action,'#fff') }};">{{ log.action }}</span></td>
+        <td class="td-mono td-muted">{{ log.table_name }}</td>
+        <td class="td-mono" style="color:var(--blue);">{{ log.record_id }}</td>
+        <td style="color:var(--muted);font-size:12px;">{{ log.details }}</td>
+      </tr>
+      {% endfor %}
+      {% if not logs %}
+      <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--dim);font-family:var(--mono);">No audit entries yet.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

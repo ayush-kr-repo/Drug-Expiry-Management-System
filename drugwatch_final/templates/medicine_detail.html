@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}{{ med.name }}{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:24px;" class="fadein">
+  <a href="{{ url_for('catalog') }}" style="color:var(--muted);font-family:var(--mono);font-size:12px;text-decoration:none;">← Back to Catalog</a>
+</div>
+
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
+
+  <!-- Main info -->
+  <div>
+    <div class="card fadein" style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+        <div>
+          <h1 style="font-size:22px;font-weight:700;text-transform:capitalize;">{{ med.name }}</h1>
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+            {% if med.therapeutic_class %}
+            <span style="background:#58a6ff11;border:1px solid #58a6ff44;color:#58a6ff;padding:3px 10px;border-radius:4px;font-size:12px;font-family:var(--mono);">{{ med.therapeutic_class }}</span>
+            {% endif %}
+            {% if med.habit_forming == 'Yes' %}
+            <span style="background:#ff3b3b22;border:1px solid #ff3b3b;color:#ff6b6b;padding:3px 10px;border-radius:4px;font-size:12px;font-family:var(--mono);">⚠ HABIT FORMING</span>
+            {% endif %}
+          </div>
+        </div>
+        <div style="font-family:var(--mono);color:var(--dim);font-size:12px;">ID #{{ med.med_id }}</div>
+      </div>
+
+      {% if med.uses %}
+      <div style="margin-bottom:20px;">
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;margin-bottom:10px;">USES / INDICATIONS</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          {% for use in med.uses.split(', ') %}
+          {% if use %}
+          <span style="background:#00e57611;border:1px solid #00e57633;color:#00e576;padding:4px 12px;border-radius:20px;font-size:12px;">{{ use }}</span>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if med.chemical_class and med.chemical_class != 'NA' %}
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;margin-bottom:6px;">CHEMICAL CLASS</div>
+        <div style="font-size:14px;color:var(--text);">{{ med.chemical_class }}</div>
+      </div>
+      {% endif %}
+
+      {% if med.action_class and med.action_class != 'NA' %}
+      <div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;margin-bottom:6px;">ACTION CLASS</div>
+        <div style="font-size:14px;color:var(--text);">{{ med.action_class }}</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Side Effects -->
+    {% if med.side_effects %}
+    <div class="card fadein" style="animation-delay:.1s;">
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;margin-bottom:14px;">SIDE EFFECTS</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        {% for fx in med.side_effects.split(', ') %}
+        {% if fx %}
+        <span style="background:#ff8c0011;border:1px solid #ff8c0033;color:#ffab40;padding:4px 12px;border-radius:20px;font-size:12px;">{{ fx }}</span>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Sidebar -->
+  <div>
+    <!-- Substitutes -->
+    {% if med.substitutes %}
+    <div class="card fadein" style="animation-delay:.15s;margin-bottom:16px;">
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;margin-bottom:14px;">SUBSTITUTE MEDICINES</div>
+      {% for sub in med.substitutes.split(', ') %}
+      {% if sub %}
+      <div style="padding:8px 0;border-bottom:1px solid #161b22;font-size:13px;color:var(--text);">{{ sub }}</div>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Quick Info -->
+    <div class="card fadein" style="animation-delay:.2s;">
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;margin-bottom:14px;">QUICK INFO</div>
+      <div style="padding:10px 0;border-bottom:1px solid #161b22;">
+        <div style="font-size:11px;color:var(--dim);font-family:var(--mono);">HABIT FORMING</div>
+        <div style="font-size:14px;margin-top:3px;color:{% if med.habit_forming=='Yes' %}#ff6b6b{% else %}#00e576{% endif %};">{{ med.habit_forming or 'Unknown' }}</div>
+      </div>
+      <div style="padding:10px 0;">
+        <div style="font-size:11px;color:var(--dim);font-family:var(--mono);">THERAPEUTIC CLASS</div>
+        <div style="font-size:13px;margin-top:3px;color:var(--text);">{{ med.therapeutic_class or '—' }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

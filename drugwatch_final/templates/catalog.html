@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Medicine Catalog{% endblock %}
+{% block content %}
+
+<div class="page-header fadein">
+  <h1>Medicine Catalog</h1>
+  <p>{{ '{:,}'.format(total) }} medicines found · real dataset</p>
+</div>
+
+<!-- Search & Filter -->
+<form method="GET" class="filters fadein" style="animation-delay:.05s;flex-wrap:wrap;gap:10px;">
+  <input class="filter-input" name="q" placeholder="Search medicine name..." value="{{ search }}" style="min-width:220px;"/>
+  <select class="filter-select" name="tc" onchange="this.form.submit()">
+    <option value="">All Therapeutic Classes</option>
+    {% for tc in tclasses %}
+    <option value="{{ tc.therapeutic_class }}" {% if tc_filter==tc.therapeutic_class %}selected{% endif %}>{{ tc.therapeutic_class }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-ghost btn-sm">Search</button>
+  {% if search or tc_filter %}
+  <a href="{{ url_for('catalog') }}" class="btn btn-ghost btn-sm">✕ Clear</a>
+  {% endif %}
+</form>
+
+<!-- Table -->
+<div class="table-wrap fadein" style="animation-delay:.10s;">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>MEDICINE NAME</th>
+        <th>THERAPEUTIC CLASS</th>
+        <th>CHEMICAL CLASS</th>
+        <th>HABIT FORMING</th>
+        <th>USES</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in medicines %}
+      <tr>
+        <td class="td-mono td-muted" style="font-size:11px;">{{ m.med_id }}</td>
+        <td style="font-weight:600;font-size:13px;">{{ m.name }}</td>
+        <td>
+          {% if m.therapeutic_class %}
+          <span style="background:#58a6ff11;border:1px solid #58a6ff33;color:#58a6ff;padding:2px 8px;border-radius:4px;font-size:11px;font-family:var(--mono);">{{ m.therapeutic_class }}</span>
+          {% else %}<span class="td-muted">—</span>{% endif %}
+        </td>
+        <td class="td-muted" style="font-size:12px;">{{ m.chemical_class or '—' }}</td>
+        <td>
+          {% if m.habit_forming == 'Yes' %}
+          <span style="color:#ff6b6b;font-family:var(--mono);font-size:11px;">⚠ Yes</span>
+          {% else %}
+          <span style="color:var(--dim);font-family:var(--mono);font-size:11px;">No</span>
+          {% endif %}
+        </td>
+        <td style="font-size:12px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ m.uses or '—' }}</td>
+        <td>
+          <a href="{{ url_for('medicine_detail', med_id=m.med_id) }}" class="btn btn-ghost btn-sm" style="font-size:11px;">Details</a>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not medicines %}
+      <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--dim);font-family:var(--mono);">No medicines found</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px;" class="fadein">
+  {% if page > 1 %}
+  <a href="?q={{ search }}&tc={{ tc_filter }}&page={{ page-1 }}" class="btn btn-ghost btn-sm">← Prev</a>
+  {% endif %}
+
+  <span style="color:var(--muted);font-family:var(--mono);font-size:13px;">Page {{ page }} of {{ total_pages }}</span>
+
+  {% if page < total_pages %}
+  <a href="?q={{ search }}&tc={{ tc_filter }}&page={{ page+1 }}" class="btn btn-ghost btn-sm">Next →</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

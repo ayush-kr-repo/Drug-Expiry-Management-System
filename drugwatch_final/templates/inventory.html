@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Inventory{% endblock %}
+{% block content %}
+
+<div class="page-header-row fadein">
+  <div>
+    <h1>Batch Inventory</h1>
+    <p style="color:var(--muted);font-size:13px;margin-top:4px;">{{ batches|length }} batches found</p>
+  </div>
+  <button class="btn btn-primary" onclick="openModal('addBatchModal')">+ Add Batch</button>
+</div>
+
+<!-- Filters -->
+<form method="GET" class="filters fadein" style="animation-delay:.05s">
+  <input class="filter-input" name="q" placeholder="Search drug, batch, supplier..." value="{{ search }}"/>
+  <select class="filter-select" name="status" onchange="this.form.submit()">
+    <option value="all" {% if status_filter=='all' %}selected{% endif %}>All Status</option>
+    <option value="expired"  {% if status_filter=='expired'  %}selected{% endif %}>Expired</option>
+    <option value="critical" {% if status_filter=='critical' %}selected{% endif %}>Critical</option>
+    <option value="warning"  {% if status_filter=='warning'  %}selected{% endif %}>Warning</option>
+    <option value="good"     {% if status_filter=='good'     %}selected{% endif %}>Good</option>
+  </select>
+  <button type="submit" class="btn btn-ghost btn-sm">Search</button>
+</form>
+
+<!-- Table -->
+<div class="table-wrap fadein" style="animation-delay:.10s">
+  <table>
+    <thead>
+      <tr>
+        <th>BATCH ID</th><th>DRUG</th><th>CATEGORY</th><th>MFG DATE</th><th>EXP DATE</th>
+        <th>QTY</th><th>SUPPLIER</th><th>LOCATION</th><th>STATUS</th><th>DAYS</th>
+        {% if session.user.role == 'admin' %}<th></th>{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in batches %}
+      <tr>
+        <td class="td-mono">{{ b.batch_id }}</td>
+        <td style="font-weight:600;">{{ b.drug_name }}</td>
+        <td class="td-muted">{{ b.category }}</td>
+        <td class="td-mono td-muted">{{ b.mfg_date }}</td>
+        <td class="td-mono td-muted">{{ b.exp_date }}</td>
+        <td class="td-mono {% if b.quantity < 100 %}td-warn{% endif %}">
+          <form method="POST" action="{{ url_for('update_qty') }}" style="display:inline-flex;align-items:center;gap:6px;">
+            <input type="hidden" name="batch_id" value="{{ b.batch_id }}"/>
+            <input type="number" name="quantity" value="{{ b.quantity }}" min="0"
+              style="width:70px;background:#161b22;border:1px solid var(--border2);border-radius:4px;padding:3px 6px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;"/>
+            <button type="submit" class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:11px;">✓</button>
+          </form>
+        </td>
+        <td class="td-muted">{{ b.supplier or '—' }}</td>
+        <td class="td-muted">{{ b.location }}</td>
+        <td><span class="badge badge-{{ b.status }}">{{ b.status|upper }}</span></td>
+        <td class="td-mono" style="color:{% if b.days_left < 0 %}#ff6b6b{% elif b.days_left < 30 %}#ffab40{% elif b.days_left < 90 %}#ffd600{% else %}#00e576{% endif %};">
+          {% if b.days_left < 0 %}{{ (b.days_left * -1) }}d overdue{% else %}{{ b.days_left }}d{% endif %}
+        </td>
+        {% if session.user.role == 'admin' %}
+        <td>
+          <a href="{{ url_for('delete_batch', batch_id=b.batch_id) }}"
+             onclick="return confirm('Delete batch {{ b.batch_id }}?')"
+             class="btn btn-danger btn-sm">remove</a>
+        </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+      {% if not batches %}
+      <tr><td colspan="11" style="text-align:center;padding:40px;color:var(--dim);font-family:var(--mono);">No records found</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Add Batch Modal -->
+<div class="modal-overlay" id="addBatchModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Add New Batch</span>
+      <button class="modal-close" onclick="closeModal('addBatchModal')">✕</button>
+    </div>
+    <form method="POST" action="{{ url_for('add_batch') }}">
+      <div class="form-group">
+        <label class="form-label">DRUG</label>
+        <select name="drug_id" class="form-input" required>
+          <option value="">Select drug...</option>
+          {% for d in drugs %}
+          <option value="{{ d.drug_id }}">{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">SUPPLIER</label>
+        <select name="supplier_id" class="form-input">
+          <option value="">None</option>
+          {% for s in suppliers %}
+          <option value="{{ s.supplier_id }}">{{ s.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">MFG DATE</label>
+          <input name="mfg_date" type="date" class="form-input"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">EXP DATE</label>
+          <input name="exp_date" type="date" class="form-input" required/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">QUANTITY</label>
+          <input name="quantity" type="number" min="1" class="form-input" placeholder="500" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">LOCATION</label>
+          <input name="location" type="text" class="form-input" placeholder="Rack A1"/>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;font-size:15px;margin-top:6px;">Add Batch</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

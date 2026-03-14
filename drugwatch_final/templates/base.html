@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DrugWatch — {% block title %}{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #010409;
+      --surface: #0d1117;
+      --border:  #21262d;
+      --border2: #30363d;
+      --muted:   #8b949e;
+      --dim:     #484f58;
+      --text:    #e6edf3;
+      --red:     #ff3b3b;
+      --red-muted:#ff6b6b;
+      --green:   #00e576;
+      --yellow:  #ffd600;
+      --orange:  #ffab40;
+      --blue:    #58a6ff;
+      --mono:    'DM Mono', monospace;
+      --sans:    'Space Grotesk', sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; display: flex; }
+    ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: var(--surface); } ::-webkit-scrollbar-thumb { background: var(--border2); border-radius:2px; }
+
+    /* Sidebar */
+    .sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px 0; flex-shrink: 0; position: sticky; top: 0; height: 100vh; }
+    .logo { padding: 0 20px 28px; display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg, #ff6b6b, #ff3b3b); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: #fff; flex-shrink: 0; }
+    .logo-text { font-size: 13px; font-weight: 700; } .logo-sub { font-size: 10px; color: var(--muted); font-family: var(--mono); letter-spacing: 1px; margin-top: 1px; }
+    nav { flex: 1; padding: 0 12px; }
+    .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; border: none; background: transparent; color: var(--muted); font-family: var(--sans); font-size: 14px; cursor: pointer; width: 100%; text-decoration: none; margin-bottom: 2px; transition: all 0.15s; border-left: 2px solid transparent; }
+    .nav-link:hover { background: var(--surface); color: var(--text); }
+    .nav-link.active { background: #161b22; color: var(--text); font-weight: 600; border-left-color: var(--red); }
+    .nav-icon { font-size: 16px; color: var(--dim); }
+    .nav-link.active .nav-icon { color: var(--red-muted); }
+    .nav-badge { margin-left: auto; background: var(--red); color: #fff; border-radius: 10px; font-size: 10px; padding: 1px 6px; font-weight: 700; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); margin-top: auto; }
+    .sidebar-footer .role-label { font-size: 11px; color: var(--dim); font-family: var(--mono); letter-spacing: 0.5px; }
+    .sidebar-footer .username { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    /* Main */
+    .main { flex: 1; overflow: auto; padding: 32px 36px; }
+    .page-header { margin-bottom: 28px; }
+    .page-header h1 { font-size: 24px; font-weight: 700; }
+    .page-header p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .page-header-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
+
+    /* Cards */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+    .stat-icon { font-size: 22px; margin-bottom: 8px; }
+    .stat-value { font-size: 30px; font-weight: 700; font-family: var(--mono); }
+    .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; letter-spacing: 0.5px; }
+
+    /* Badges */
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; font-family: var(--mono); }
+    .badge-expired  { background: #ff3b3b22; border: 1px solid #ff3b3b; color: #ff6b6b; }
+    .badge-critical { background: #ff8c0022; border: 1px solid #ff8c00; color: #ffab40; }
+    .badge-warning  { background: #ffd60022; border: 1px solid #ffd600; color: #ffd600; }
+    .badge-good     { background: #00e57622; border: 1px solid #00e576; color: #00e576; }
+    .badge-admin    { background: #58a6ff22; border: 1px solid #58a6ff; color: #58a6ff; }
+    .badge-pharmacist { background: #d2a8ff22; border: 1px solid #d2a8ff; color: #d2a8ff; }
+
+    /* Table */
+    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { border-bottom: 1px solid var(--border); }
+    th { padding: 14px 16px; text-align: left; font-size: 11px; color: var(--muted); font-family: var(--mono); letter-spacing: 1px; font-weight: 500; }
+    td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #161b22; }
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #161b22; }
+    .td-mono { font-family: var(--mono); color: var(--blue); }
+    .td-muted { color: var(--muted); }
+    .td-warn { color: var(--orange); }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; font-family: var(--sans); font-size: 14px; font-weight: 600; transition: opacity 0.15s; text-decoration: none; }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: var(--red); color: #fff; }
+    .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
+    .btn-ghost { background: none; border: 1px solid var(--border2); color: var(--muted); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+    .btn-danger { background: #ff3b3b22; border: 1px solid var(--red); color: var(--red-muted); }
+
+    /* Form */
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; font-size: 12px; color: var(--muted); font-family: var(--mono); letter-spacing: 1px; margin-bottom: 6px; }
+    .form-input { width: 100%; background: #161b22; border: 1px solid var(--border2); border-radius: 6px; padding: 10px 12px; color: var(--text); font-size: 14px; font-family: var(--mono); outline: none; transition: border-color 0.15s; }
+    .form-input:focus { border-color: var(--blue); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Filters */
+    .filters { display: flex; gap: 12px; margin-bottom: 20px; }
+    .filter-input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; color: var(--text); font-size: 13px; outline: none; font-family: var(--mono); }
+    .filter-select { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-size: 13px; outline: none; font-family: var(--mono); }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: #000000cc; z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 32px; min-width: 460px; max-width: 540px; width: 90%; box-shadow: 0 24px 64px #000; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .modal-title { font-size: 16px; font-weight: 600; font-family: var(--mono); }
+    .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; }
+
+    /* Flash messages */
+    .flash { padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
+    .flash-success { background: #00e57611; border: 1px solid var(--green); color: var(--green); }
+    .flash-danger  { background: #ff3b3b11; border: 1px solid var(--red); color: var(--red-muted); }
+    .flash-info    { background: #58a6ff11; border: 1px solid var(--blue); color: var(--blue); }
+
+    /* Alert cards */
+    .alert-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+    .alert-card { border-radius: 10px; padding: 16px 20px; }
+    .alert-card.expired  { background: #ff3b3b22; border: 1px solid #ff3b3b; }
+    .alert-card.critical { background: #ff8c0022; border: 1px solid #ff8c00; }
+    .alert-card.warning  { background: #ffd60022; border: 1px solid #ffd600; }
+
+    /* Progress bar */
+    .progress-track { height: 8px; background: #161b22; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+    .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    .fadein { animation: fadeIn 0.35s ease both; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.45; } }
+    .pulse { animation: pulse 2s infinite; }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">Rx</div>
+    <div>
+      <div class="logo-text">DrugWatch</div>
+      <div class="logo-sub">EXPIRY MGMT</div>
+    </div>
+  </div>
+
+  <nav>
+    <a href="{{ url_for('dashboard') }}"  class="nav-link {% if request.endpoint=='dashboard' %}active{% endif %}">
+      <span class="nav-icon">◈</span> Dashboard
+    </a>
+    <a href="{{ url_for('inventory') }}"  class="nav-link {% if request.endpoint=='inventory' %}active{% endif %}">
+      <span class="nav-icon">⊞</span> Inventory
+    </a>
+    <a href="{{ url_for('alerts') }}"     class="nav-link {% if request.endpoint=='alerts' %}active{% endif %}">
+      <span class="nav-icon">⚠</span> Alerts
+    </a>
+    <a href="{{ url_for('drugs') }}"      class="nav-link {% if request.endpoint=='drugs' %}active{% endif %}">
+      <span class="nav-icon">⊕</span> Drugs
+    </a>
+    <a href="{{ url_for('suppliers') }}"  class="nav-link {% if request.endpoint=='suppliers' %}active{% endif %}">
+      <span class="nav-icon">◩</span> Suppliers
+    </a>
+    <a href="{{ url_for('catalog') }}"    class="nav-link {% if request.endpoint in ['catalog','medicine_detail'] %}active{% endif %}">
+      <span class="nav-icon">⊛</span> Med Catalog
+    </a>
+    <a href="{{ url_for('billing') }}"    class="nav-link {% if request.endpoint=='billing' %}active{% endif %}">
+      <span class="nav-icon">◐</span> Billing
+    </a>
+    <a href="{{ url_for('bills') }}"      class="nav-link {% if request.endpoint in ['bills','bill_detail'] %}active{% endif %}">
+      <span class="nav-icon">⊠</span> Bills
+    </a>
+    <a href="{{ url_for('patients') }}"   class="nav-link {% if request.endpoint in ['patients','patient_detail'] %}active{% endif %}">
+      <span class="nav-icon">◉</span> Patients
+    </a>
+    <a href="{{ url_for('reports') }}"    class="nav-link {% if request.endpoint=='reports' %}active{% endif %}">
+      <span class="nav-icon">⊟</span> Reports
+    </a>
+    {% if session.user.role == 'admin' %}
+    <a href="{{ url_for('audit') }}"      class="nav-link {% if request.endpoint=='audit' %}active{% endif %}">
+      <span class="nav-icon">☰</span> Audit Log
+    </a>
+    {% endif %}
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="role-label">LOGGED IN AS</div>
+    <div class="username">{{ session.user.role|title }} · {{ session.user.username }}</div>
+    <a href="{{ url_for('logout') }}" style="display:block; margin-top:10px; font-size:12px; color:var(--muted); text-decoration:none; font-family:var(--mono);">→ logout</a>
+  </div>
+</aside>
+
+<!-- Main content -->
+<main class="main">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="flash flash-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+
+<!-- Modal JS helper -->
+<script>
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  document.addEventListener('click', e => {
+    if (e.target.classList.contains('modal-overlay')) e.target.classList.remove('open');
+  });
+</script>
+
+</body>
+</html>

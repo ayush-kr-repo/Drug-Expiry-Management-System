@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{{ bill.bill_number }}{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;" class="fadein">
+  <a href="{{ url_for('bills') }}" style="color:var(--muted);font-family:var(--mono);font-size:12px;text-decoration:none;">← Back to Bills</a>
+  <a href="{{ url_for('download_pdf', bill_id=bill.bill_id) }}" class="btn btn-primary btn-sm">⬇ Download PDF</a>
+</div>
+
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
+
+  <!-- Bill items -->
+  <div>
+    <div class="card fadein" style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+        <div>
+          <div style="font-family:var(--mono);color:var(--red-muted);font-size:18px;font-weight:700;">{{ bill.bill_number }}</div>
+          <div style="color:var(--muted);font-size:13px;margin-top:4px;">{{ bill.bill_date[:16] }} · by {{ bill.billed_by }}</div>
+        </div>
+        <span class="badge badge-good">{{ bill.payment_method }}</span>
+      </div>
+
+      <table>
+        <thead><tr><th>MEDICINE</th><th>BATCH</th><th>QTY</th><th>UNIT PRICE</th><th>AMOUNT</th></tr></thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td style="font-weight:600;">{{ item.drug_name }}</td>
+            <td class="td-mono td-muted" style="font-size:11px;">{{ item.batch_id }}</td>
+            <td class="td-mono">{{ item.quantity }}</td>
+            <td class="td-mono td-muted">Rs. {{ '%.2f'|format(item.unit_price) }}</td>
+            <td class="td-mono" style="color:var(--green);">Rs. {{ '%.2f'|format(item.amount) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Summary sidebar -->
+  <div>
+    <!-- Patient -->
+    <div class="card fadein" style="margin-bottom:16px;">
+      <div style="font-size:11px;color:var(--dim);font-family:var(--mono);letter-spacing:1px;margin-bottom:10px;">PATIENT</div>
+      <div style="font-weight:700;font-size:16px;">{{ bill.patient_name }}</div>
+      {% if bill.patient_phone %}<div style="color:var(--muted);font-size:13px;margin-top:4px;font-family:var(--mono);">{{ bill.patient_phone }}</div>{% endif %}
+      {% if bill.patient_id %}
+      <a href="{{ url_for('patient_detail', patient_id=bill.patient_id) }}" style="display:block;margin-top:10px;color:var(--blue);font-size:12px;text-decoration:none;font-family:var(--mono);">View Patient Profile →</a>
+      {% endif %}
+    </div>
+
+    <!-- Totals -->
+    <div class="card fadein" style="animation-delay:.05s;">
+      <div style="font-size:11px;color:var(--dim);font-family:var(--mono);letter-spacing:1px;margin-bottom:14px;">TOTALS</div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px;">
+        <span>Subtotal</span><span style="font-family:var(--mono);">Rs. {{ '%.2f'|format(bill.subtotal) }}</span>
+      </div>
+      {% if bill.discount > 0 %}
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px;">
+        <span>Discount</span><span style="font-family:var(--mono);color:#ff6b6b;">- Rs. {{ '%.2f'|format(bill.discount) }}</span>
+      </div>
+      {% endif %}
+      {% if bill.gst_amount > 0 %}
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px;">
+        <span>GST ({{ bill.gst_pct }}%)</span><span style="font-family:var(--mono);color:#ffd600;">Rs. {{ '%.2f'|format(bill.gst_amount) }}</span>
+      </div>
+      {% endif %}
+      <div style="display:flex;justify-content:space-between;font-size:20px;font-weight:700;padding-top:12px;border-top:1px solid var(--border);margin-top:4px;">
+        <span>Total</span><span style="font-family:var(--mono);color:var(--green);">Rs. {{ '%.2f'|format(bill.total) }}</span>
+      </div>
+    </div>
+
+    {% if bill.notes %}
+    <div class="card fadein" style="margin-top:16px;animation-delay:.10s;">
+      <div style="font-size:11px;color:var(--dim);font-family:var(--mono);margin-bottom:6px;">NOTES</div>
+      <div style="font-size:13px;color:var(--muted);">{{ bill.notes }}</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

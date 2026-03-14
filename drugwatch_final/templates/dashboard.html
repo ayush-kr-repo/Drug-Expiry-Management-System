@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="page-header fadein">
+  <h1>System Overview</h1>
+  <p>Drug expiry monitoring dashboard · {{ session.user.username }}</p>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card fadein" style="animation-delay:.05s">
+    <div class="stat-icon" style="color:#58a6ff">⊞</div>
+    <div class="stat-value" style="color:#58a6ff">{{ stats.total }}</div>
+    <div class="stat-label">Total Batches</div>
+  </div>
+  <div class="stat-card fadein" style="animation-delay:.10s">
+    <div class="stat-icon" style="color:#79c0ff">◩</div>
+    <div class="stat-value" style="color:#79c0ff">{{ "{:,}".format(stats.total_qty) }}</div>
+    <div class="stat-label">Total Stock (units)</div>
+  </div>
+  <div class="stat-card fadein" style="animation-delay:.15s">
+    <div class="stat-icon" style="color:#d2a8ff">⊕</div>
+    <div class="stat-value" style="color:#d2a8ff">{{ stats.drugs }}</div>
+    <div class="stat-label">Registered Drugs</div>
+  </div>
+  <div class="stat-card fadein" style="animation-delay:.20s">
+    <div class="stat-icon" style="color:#ff6b6b">✕</div>
+    <div class="stat-value" style="color:#ff6b6b">{{ stats.expired }}</div>
+    <div class="stat-label">Expired Batches</div>
+  </div>
+  <div class="stat-card fadein" style="animation-delay:.25s">
+    <div class="stat-icon" style="color:#ffab40">⚠</div>
+    <div class="stat-value" style="color:#ffab40">{{ stats.critical }}</div>
+    <div class="stat-label">Critical (&lt;30 days)</div>
+  </div>
+  <div class="stat-card fadein" style="animation-delay:.30s">
+    <div class="stat-icon" style="color:#ffd600">◎</div>
+    <div class="stat-value" style="color:#ffd600">{{ stats.warning }}</div>
+    <div class="stat-label">Warning (&lt;90 days)</div>
+  </div>
+</div>
+
+<!-- Active alerts list -->
+<div class="card fadein" style="animation-delay:.35s">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <span style="font-weight:600;font-size:15px;">⚠ Active Alerts</span>
+    <a href="{{ url_for('alerts') }}" style="color:var(--red-muted);font-family:var(--mono);font-size:13px;text-decoration:none;">VIEW ALL →</a>
+  </div>
+
+  {% if alerts %}
+  <table>
+    <thead>
+      <tr>
+        <th>BATCH</th><th>DRUG</th><th>EXPIRY</th><th>QTY</th><th>LOCATION</th><th>STATUS</th><th>DAYS</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in alerts %}
+      <tr>
+        <td class="td-mono">{{ b.batch_id }}</td>
+        <td style="font-weight:600;">{{ b.drug_name }}</td>
+        <td class="td-mono td-muted">{{ b.exp_date }}</td>
+        <td class="td-mono {% if b.quantity < 100 %}td-warn{% endif %}">{{ b.quantity }}</td>
+        <td class="td-muted">{{ b.location }}</td>
+        <td><span class="badge badge-{{ b.status }}">{{ b.status|upper }}</span></td>
+        <td class="td-mono" style="color:{% if b.days_left < 0 %}#ff6b6b{% elif b.days_left < 30 %}#ffab40{% else %}#ffd600{% endif %};">
+          {% if b.days_left < 0 %}-{{ (b.days_left * -1) }}d{% else %}{{ b.days_left }}d{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:var(--dim);font-family:var(--mono);font-size:13px;">No active alerts.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Patients{% endblock %}
+{% block content %}
+
+<div class="page-header-row fadein">
+  <div><h1>Patient Records</h1><p style="color:var(--muted);font-size:13px;margin-top:4px;">{{ patients|length }} patients registered</p></div>
+  <button class="btn btn-primary" onclick="openModal('addPatientModal')">+ New Patient</button>
+</div>
+
+<form method="GET" class="filters fadein">
+  <input class="filter-input" name="q" placeholder="Search by name, phone, ID..." value="{{ search }}"/>
+  <button type="submit" class="btn btn-ghost btn-sm">Search</button>
+  {% if search %}<a href="{{ url_for('patients') }}" class="btn btn-ghost btn-sm">✕ Clear</a>{% endif %}
+</form>
+
+<div class="table-wrap fadein" style="animation-delay:.05s;">
+  <table>
+    <thead><tr><th>PATIENT ID</th><th>NAME</th><th>PHONE</th><th>EMAIL</th><th>ADDRESS</th><th>BILLS</th><th>TOTAL SPENT</th><th>SINCE</th><th></th></tr></thead>
+    <tbody>
+      {% for p in patients %}
+      <tr>
+        <td class="td-mono" style="color:var(--blue);">
+          <a href="{{ url_for('patient_detail', patient_id=p.patient_id) }}" style="color:var(--blue);text-decoration:none;">{{ p.patient_id }}</a>
+        </td>
+        <td style="font-weight:600;">{{ p.name }}</td>
+        <td class="td-mono td-muted">{{ p.phone or '—' }}</td>
+        <td class="td-muted" style="font-size:12px;">{{ p.email or '—' }}</td>
+        <td class="td-muted" style="font-size:12px;">{{ p.address or '—' }}</td>
+        <td class="td-mono" style="color:var(--blue);">{{ p.total_bills }}</td>
+        <td class="td-mono" style="color:var(--green);">Rs. {{ '%.2f'|format(p.total_spent) }}</td>
+        <td class="td-muted" style="font-size:12px;font-family:var(--mono);">{{ p.created_at[:10] }}</td>
+        <td style="display:flex;gap:6px;">
+          <button onclick="openEditModal('{{ p.patient_id }}','{{ p.name }}','{{ p.phone or '' }}','{{ p.email or '' }}','{{ p.address or '' }}')"
+                  class="btn btn-ghost btn-sm" style="font-size:11px;">edit</button>
+          {% if session.user.role == 'admin' %}
+          <a href="{{ url_for('delete_patient', patient_id=p.patient_id) }}"
+             onclick="return confirm('Remove {{ p.name }}?')"
+             class="btn btn-danger btn-sm" style="font-size:11px;">del</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not patients %}
+      <tr><td colspan="9" style="text-align:center;padding:40px;color:var(--dim);font-family:var(--mono);">No patients found</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="addPatientModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Register New Patient</span><button class="modal-close" onclick="closeModal('addPatientModal')">✕</button></div>
+    <form method="POST" action="{{ url_for('add_patient') }}">
+      <div class="form-group"><label class="form-label">FULL NAME</label><input name="name" class="form-input" required/></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">PHONE</label><input name="phone" class="form-input"/></div>
+        <div class="form-group"><label class="form-label">EMAIL</label><input name="email" type="email" class="form-input"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">ADDRESS</label><input name="address" class="form-input"/></div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;font-size:15px;margin-top:6px;">Register Patient</button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editPatientModal">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Edit Patient</span><button class="modal-close" onclick="closeModal('editPatientModal')">✕</button></div>
+    <form method="POST" id="editPatientForm">
+      <div class="form-group"><label class="form-label">FULL NAME</label><input name="name" id="ep_name" class="form-input" required/></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">PHONE</label><input name="phone" id="ep_phone" class="form-input"/></div>
+        <div class="form-group"><label class="form-label">EMAIL</label><input name="email" id="ep_email" type="email" class="form-input"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">ADDRESS</label><input name="address" id="ep_address" class="form-input"/></div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;font-size:15px;margin-top:6px;">Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function openEditModal(id, name, phone, email, address) {
+  document.getElementById('ep_name').value    = name;
+  document.getElementById('ep_phone').value   = phone;
+  document.getElementById('ep_email').value   = email;
+  document.getElementById('ep_address').value = address;
+  document.getElementById('editPatientForm').action = `/patients/edit/${id}`;
+  openModal('editPatientModal');
+}
+</script>
+{% endblock %}

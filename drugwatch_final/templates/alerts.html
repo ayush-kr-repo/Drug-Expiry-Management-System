@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Alerts{% endblock %}
+{% block content %}
+
+<div class="page-header fadein">
+  <h1>Expiry Alerts</h1>
+  <p>{{ (expired|length) + (critical|length) + (warning|length) }} batches require attention</p>
+</div>
+
+<!-- Expired -->
+{% if expired %}
+<div style="margin-bottom:28px;" class="fadein">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+    <div style="width:3px;height:20px;background:#ff3b3b;border-radius:2px;"></div>
+    <span style="color:#ff6b6b;font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:2px;">EXPIRED</span>
+    <span style="color:var(--dim);font-family:var(--mono);font-size:12px;">({{ expired|length }} batches)</span>
+  </div>
+  <div class="alert-grid">
+    {% for b in expired %}
+    <div class="alert-card expired">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div style="font-weight:700;font-size:15px;">{{ b.drug_name }}</div>
+          <div style="color:var(--muted);font-size:12px;font-family:var(--mono);margin-top:2px;">#{{ b.batch_id }}</div>
+        </div>
+        <div style="color:#ff6b6b;font-family:var(--mono);font-weight:700;font-size:22px;" class="pulse">
+          {{ b.days_overdue }}<span style="font-size:11px;">d</span>
+        </div>
+      </div>
+      <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        {% for k,v in [('Expiry', b.exp_date),('Qty', b.quantity|string+' units'),('Supplier', b.supplier or '—'),('Location', b.location)] %}
+        <div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;">{{ k }}</div>
+          <div style="font-size:13px;margin-top:1px;">{{ v }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Critical -->
+{% if critical %}
+<div style="margin-bottom:28px;" class="fadein" style="animation-delay:.1s">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+    <div style="width:3px;height:20px;background:#ff8c00;border-radius:2px;"></div>
+    <span style="color:#ffab40;font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:2px;">CRITICAL</span>
+    <span style="color:var(--dim);font-family:var(--mono);font-size:12px;">({{ critical|length }} batches)</span>
+  </div>
+  <div class="alert-grid">
+    {% for b in critical %}
+    <div class="alert-card critical">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div style="font-weight:700;font-size:15px;">{{ b.drug_name }}</div>
+          <div style="color:var(--muted);font-size:12px;font-family:var(--mono);margin-top:2px;">#{{ b.batch_id }}</div>
+        </div>
+        <div style="color:#ffab40;font-family:var(--mono);font-weight:700;font-size:22px;">{{ b.days_left }}<span style="font-size:11px;">d</span></div>
+      </div>
+      <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        {% for k,v in [('Expiry', b.exp_date),('Qty', b.quantity|string+' units'),('Supplier', b.supplier or '—'),('Location', b.location)] %}
+        <div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;">{{ k }}</div>
+          <div style="font-size:13px;margin-top:1px;">{{ v }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Warning -->
+{% if warning %}
+<div style="margin-bottom:28px;" class="fadein" style="animation-delay:.2s">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+    <div style="width:3px;height:20px;background:#ffd600;border-radius:2px;"></div>
+    <span style="color:#ffd600;font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:2px;">WARNING</span>
+    <span style="color:var(--dim);font-family:var(--mono);font-size:12px;">({{ warning|length }} batches)</span>
+  </div>
+  <div class="alert-grid">
+    {% for b in warning %}
+    <div class="alert-card warning">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div style="font-weight:700;font-size:15px;">{{ b.drug_name }}</div>
+          <div style="color:var(--muted);font-size:12px;font-family:var(--mono);margin-top:2px;">#{{ b.batch_id }}</div>
+        </div>
+        <div style="color:#ffd600;font-family:var(--mono);font-weight:700;font-size:22px;">{{ b.days_left }}<span style="font-size:11px;">d</span></div>
+      </div>
+      <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        {% for k,v in [('Expiry', b.exp_date),('Qty', b.quantity|string+' units'),('Supplier', b.supplier or '—'),('Location', b.location)] %}
+        <div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;">{{ k }}</div>
+          <div style="font-size:13px;margin-top:1px;">{{ v }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Low stock -->
+{% if low_stock %}
+<div class="card fadein">
+  <div style="font-weight:600;margin-bottom:16px;">⚡ Low Stock (&lt; 100 units)</div>
+  <table>
+    <thead><tr><th>BATCH</th><th>DRUG</th><th>QTY</th><th>LOCATION</th><th>STATUS</th></tr></thead>
+    <tbody>
+      {% for b in low_stock %}
+      <tr>
+        <td class="td-mono">{{ b.batch_id }}</td>
+        <td style="font-weight:600;">{{ b.drug_name }}</td>
+        <td class="td-mono td-warn">{{ b.quantity }}</td>
+        <td class="td-muted">{{ b.location }}</td>
+        <td><span class="badge badge-{{ b.status }}">{{ b.status|upper }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if not expired and not critical and not warning %}
+<div class="card" style="text-align:center;padding:60px;color:var(--dim);">
+  <div style="font-size:32px;margin-bottom:12px;">✓</div>
+  <div style="font-family:var(--mono);">All batches are within safe expiry range.</div>
+</div>
+{% endif %}
+
+{% endblock %}
