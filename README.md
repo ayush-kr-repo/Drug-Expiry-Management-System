@@ -201,7 +201,20 @@ drugwatch/
 
 ## 📸 Screenshots
 
-> *(Add screenshots of your running app here)*
+### Dashboard
+![Dashboard](dashboard.png)
+
+### Inventory
+![Inventory](Inventory.png)
+
+### Alerts
+![Alerts](Alerts.png)
+
+### Billing
+![Billing](Billing.png)
+
+### Audit log
+![Audit log](Audit_log.png)
 
 ---
 
