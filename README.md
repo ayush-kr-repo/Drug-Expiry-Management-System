@@ -202,7 +202,7 @@ drugwatch/
 ## 📸 Screenshots
 
 ### Dashboard
-![Dashboard](dashboard.png)
+![Dashboard](Dashboard.png)
 
 ### Inventory
 ![Inventory](Inventory.png)
