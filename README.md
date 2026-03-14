@@ -144,8 +144,8 @@ trg_bill_insert       -- Logs every new bill → AuditLog
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/drugwatch.git
-cd drugwatch
+git clone https://github.com/ayush-kr-repo/Drug-Expiry-Management-System.git
+cd Drug-Expiry-Management-System
 
 # 2. Install dependencies
 pip install flask reportlab
