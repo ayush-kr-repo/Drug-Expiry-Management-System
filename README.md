@@ -210,8 +210,8 @@ drugwatch/
 ### Alerts
 ![Alerts](Alerts.png)
 
-### Billing
-![Billing](Billing.png)
+### Billings
+![Billings](Billings.png)
 
 ### Audit log
 ![Audit log](Audit_log.png)
