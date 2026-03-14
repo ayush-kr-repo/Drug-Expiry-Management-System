@@ -156,6 +156,8 @@ python app.py
 
 Then open your browser at: **http://127.0.0.1:5000**
 
+📁 Download `medicine_dataset.csv` from Kaggle and place it in the project folder before running. Dataset link: https://www.kaggle.com/datasets/singhnavjot2062001/11000-medicine-details
+
 > ⚠️ First run imports 248k medicines from the dataset — takes ~30 seconds. After that it's instant.
 
 ---
