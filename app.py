@@ -9,7 +9,7 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g, jsonify, send_file
 
 app = Flask(__name__)
-app.secret_key = "drugwatch_secret_2024"
+app.secret_key = os.getenv("SECRET_KEY", "drugwatch_demo_secret")
 
 DB_PATH  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "drugwatch.db")
 CSV_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "medicine_dataset.csv")
