@@ -1,5 +1,12 @@
 # Database file (auto-generated on first run)
 drugwatch.db
+*.db
+
+# Environment / secrets
+.env
+
+# Large local dataset
+medicine_dataset.csv
 
 # Python
 __pycache__/
@@ -11,18 +18,3 @@ __pycache__/
 dist/
 build/
 .eggs/
-
-# Virtual environment
-venv/
-env/
-.venv/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
