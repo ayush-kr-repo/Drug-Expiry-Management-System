@@ -2,19 +2,6 @@
 
 > A full-stack web application for managing drug inventory, tracking expiry dates, dispensing medicines, and maintaining patient records — built with Python (Flask) and SQLite.
 
-**DBMS University Project** | B.Tech CSE | KIIT University
-
----
-
-## 👥 Team Members
-
-| Name | Roll No |
-|------|---------|
-| Ayush Kumar | 24155916 |
-| Anubhab Das | 24155906 |
-| Abhijoy Debnath | 24155928 |
-| Aditya Sengupta | 24155302 |
-
 ---
 
 ## 🎯 Project Overview
@@ -23,19 +10,45 @@ DrugWatch is a **Database Management System** project that solves a real-world h
 
 ---
 
-## ✨ Features
+## Project Preview
+
+### Dashboard
+![Dashboard](Dashboard.png)
+
+### Inventory
+![Inventory](Inventory.png)
+
+### Billings
+![Billings](Billings.png)
+
+### Audit log
+![Audit log](Audit_log.png)
+
+---
+
+## Project Highlights
+
+- Built a Flask + SQLite pharmacy management system with inventory, expiry alerts, billing, patient records, and audit logs.
+- Designed a relational database with 9 tables, 4 SQL views, 4 triggers, constraints, and foreign-key relationships.
+- Implemented atomic billing transactions where stock deduction and bill creation happen together.
+- Integrated a Kaggle medicine catalog with 248,000+ medicine records.
+- Generated PDF receipts using ReportLab.
+
+---
+
+## Features
 
 ### 📊 Dashboard
 - **Admin Dashboard** — live stats, recent bills, expiry alerts, DB activity log
 - **Pharmacist Dashboard** — task-focused view with only relevant alerts and low stock
 
-### 💊 Inventory Management
+### Inventory Management
 - View, search and filter all drug batches
 - Add new batches with supplier, location, expiry date
 - Inline stock quantity update
 - Color-coded expiry status — Good / Warning / Critical / Expired
 
-### ⚠️ Alerts Center
+### Alerts Center
 - Expired batches (with days overdue)
 - Critical batches (expiring within 30 days)
 - Warning batches (expiring within 90 days)
@@ -50,29 +63,29 @@ DrugWatch is a **Database Management System** project that solves a real-world h
 - **Atomic transaction** — stock deducted and bill saved together (all or nothing)
 - PDF receipt generated instantly
 
-### 👥 Patient Management
+### Patient Management
 - Register patients with auto-generated `CUST-XXXXXX` IDs
 - View complete purchase history per patient
 - Edit and search patient records
 - Bills preserved even if patient is removed
 
-### 📄 Bills History
+### Bills History
 - View all bills with search and date range filter
 - Full bill detail view with line items
 - Download any bill as a **PDF receipt**
 
-### 🗃️ Medicine Catalog
+### Medicine Catalog
 - 248,000+ real medicines imported from Kaggle dataset
 - Search by name or filter by therapeutic class
 - View side effects, uses, substitutes, chemical class for any medicine
 
-### 📈 Reports
+### Reports
 - Expiry status distribution (progress bars)
 - Stock breakdown by category and supplier
 - Revenue by payment method
 - Top therapeutic classes in catalog
 
-### 🔍 Audit Log *(Admin only)*
+### Audit Log *(Admin only)*
 - Every database change automatically logged by SQL triggers
 - Full history of INSERT, UPDATE, DELETE operations
 
@@ -148,7 +161,7 @@ git clone https://github.com/ayush-kr-repo/Drug-Expiry-Management-System.git
 cd Drug-Expiry-Management-System
 
 # 2. Install dependencies
-pip install flask reportlab
+pip install -r requirements.txt
 
 # 3. Run the app
 python app.py
@@ -168,6 +181,8 @@ Then open your browser at: **http://127.0.0.1:5000**
 |------|----------|----------|--------|
 | 👑 Admin | `admin` | `admin123` | Full access — manage everything, view audit log |
 | 💊 Pharmacist | `pharma1` | `pharma123` | Update stock, create bills, view inventory |
+
+These credentials are for local demo use only.
 
 ---
 
@@ -198,25 +213,6 @@ drugwatch/
     ├── reports.html
     └── audit.html
 ```
-
----
-
-## 📸 Screenshots
-
-### Dashboard
-![Dashboard](Dashboard.png)
-
-### Inventory
-![Inventory](Inventory.png)
-
-### Alerts
-![Alerts](Alerts.png)
-
-### Billings
-![Billings](Billings.png)
-
-### Audit log
-![Audit log](Audit_log.png)
 
 ---
 
