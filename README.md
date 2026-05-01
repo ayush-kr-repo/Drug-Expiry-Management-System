@@ -191,8 +191,8 @@ These credentials are for local demo use only.
 ```
 drugwatch/
 ├── app.py                  ← Flask application (all routes + embedded SQL schema)
-├── schema.sql              ← SQL schema for documentation & reference
-├── medicine_dataset.csv    ← 248k+ medicine catalog (Kaggle dataset)
+├── schema.sql              ← SQL schema reference matching the embedded schema in app.py
+├── medicine_dataset.csv    ← Optional local Kaggle dataset, not committed
 ├── README.md
 └── templates/
     ├── base.html           ← Shared layout + sidebar navigation
